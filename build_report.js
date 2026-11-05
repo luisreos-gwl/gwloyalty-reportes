@@ -9,9 +9,9 @@ const WA = "https://api.whatsapp.com/message/GJ45VRAUFEHIG1?autoload=1&app_absen
 const PORTAL = "https://portal.gwloyalty.com/#paso-1";
 // Reglas de la lámina 4 y 5 (el hallazgo que más pesa). Umbral: caída > 15%.
 const CM = D.canje_mode;
-const CLABEL = { both: "PUNTOS Y CASHBACK CANJEADOS", puntos: "PUNTOS CANJEADOS", cashback: "CASHBACK CANJEADO", recompensas: "RECOMPENSAS CANJEADAS" }[CM];
-const CROW = { both: "Puntos canjeados", puntos: "Puntos canjeados", cashback: "Cashback canjeado", recompensas: "Recompensas canjeadas" }[CM];
-const cfmt = (v) => (CM === "cashback" ? money(v) : Math.round(v).toLocaleString("en-US") + (CM === "recompensas" ? "" : " pts"));
+const CLABEL = { both: "CASHBACK Y DESCUENTOS DADOS", cashback: "CASHBACK CANJEADO", descuento: "DESCUENTOS OTORGADOS", recompensas: "RECOMPENSAS CANJEADAS" }[CM];
+const CROW = { both: "Cashback canjeado", cashback: "Cashback canjeado", descuento: "Descuentos otorgados", recompensas: "Recompensas canjeadas" }[CM];
+const cfmt = (v) => (CM === "recompensas" ? Math.round(v).toLocaleString("en-US") : money(v));
 const dNew = pct(D.nuevos, D.nuevos_prev), dCan = pct(D.canje, D.canje_prev), dIng = pct(D.ing, D.ing_prev);
 const PUSH = ["Programa 1 push por semana", "Recuérdales volver con una promo corta de tu temporada.", "Video 2.2 · Notificaciones push"];
 const REF = ["Invita a tus mejores clientes a recomendarte", "Los referidos son la forma más barata de traer clientes.", "Video 1.1 · Define tu estrategia"];
@@ -107,7 +107,7 @@ function topRow(slide, n, tag, dark) {
     ["CLIENTES REGISTRADOS", D.clientes.toLocaleString("en-US"), "▲ +" + D.nuevos + " este mes"],
     ["INGRESOS DE LEALTAD (MES)", money(D.ing), money(D.acum) + " acumulado"],
     ["TICKET PROMEDIO", money(D.ticket), arrow(D.ticket, D.ticket_prev) + " " + Math.abs(pct(D.ticket, D.ticket_prev)) + "% vs mes anterior"],
-    [CLABEL, cfmt(D.canje), CM === "both" ? "+ " + money(D.canje_cash) + " en cashback" : arrow(D.canje, D.canje_prev) + " " + Math.abs(pct(D.canje, D.canje_prev)) + "% vs mes anterior"],
+    [CLABEL, cfmt(D.canje), CM === "both" ? "+ " + money(D.canje_desc) + " en descuentos" : arrow(D.canje, D.canje_prev) + " " + Math.abs(pct(D.canje, D.canje_prev)) + "% vs mes anterior"],
     ["MEJOR CLIENTE · GASTO", money(D.mejor_gasto.gasto), D.mejor_gasto.nombre],
     ["MEJOR CLIENTE · VISITAS", D.mejor_visitas.n + " visitas", D.mejor_visitas.nombre],
   ];

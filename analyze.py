@@ -14,14 +14,17 @@ def tick(m): x=vm(m); return float(x['Purchase sum'].mean()) if len(x) else 0
 first=cut.groupby('cli').t.min().dt.to_period('M')
 def nuevos(m): return int((first==m).sum())
 import re
+# Cashback: en Boomerangme los "puntos" de una tarjeta de cashback equivalen a pesos (1 punto = $1).
 cashmask=d.Operation.str.contains('cashback',case=False)&d.Operation.str.contains('redeem|spent|used|withdraw',case=False)
-def pts(m): x=cut[(cut.m==m)&(cut.Operation=='Points redeemed')]; return float(x.Amount.sum())
-def cash(m): x=cut[(cut.m==m)&cashmask.reindex(cut.index)]; return float(x.Amount.sum())
-HAS_PTS=bool((d.Operation=='Points redeemed').any()); HAS_CASH=bool(cashmask.any())
-MODE='both' if HAS_PTS and HAS_CASH else 'puntos' if HAS_PTS else 'cashback' if HAS_CASH else 'recompensas'
+def cash(m):
+    x=cut[(cut.m==m)&((cut.Operation=='Points redeemed')|cashmask.reindex(cut.index))]; return float(x.Amount.sum())
+# Descuentos: tarjeta de descuentos (p. ej. sellos con descuento); "Discount amount" = pesos descontados.
+def desc(m): x=cut[(cut.m==m)&(cut.Operation=='Discount amount')]; return float(x.Amount.sum())
+HAS_CASH=bool(((d.Operation=='Points redeemed')|cashmask).any()); HAS_DESC=bool((d.Operation=='Discount amount').any())
+MODE='both' if HAS_CASH and HAS_DESC else 'cashback' if HAS_CASH else 'descuento' if HAS_DESC else 'recompensas'
 def cnt(m):
     x=cut[cut.m==m]; return int(x.Operation.isin(['Coupon redeemed','Rewards redeemed','Stamps redeemed']).sum())
-def prim(m): return pts(m) if MODE in ('both','puntos') else cash(m) if MODE=='cashback' else cnt(m)
+def prim(m): return cash(m) if MODE in ('both','cashback') else desc(m) if MODE=='descuento' else cnt(m)
 def canjes(m):
     x=cut[cut.m==m]; return int(x.Operation.isin(['Coupon redeemed','Points redeemed','Rewards redeemed','Stamps redeemed']).sum())
 prev3=[M-i for i in (1,2,3)]
@@ -43,7 +46,7 @@ out=dict(cliente=cliente,mes=str(M),mes_label=MESES[M.month-1].upper()+' '+str(M
  nuevos=nuevos(M),nuevos_prev=nuevos(P),nuevos_avg=avg(nuevos),
  clientes=int(v.cli.nunique()),activos=int(o.cli.nunique()),
  ticket=tick(M),ticket_prev=tick(P),ticket_avg=avg(tick),
- canje_mode=MODE,canje=prim(M),canje_prev=prim(P),canje_avg=avg(prim),canje_pts=pts(M),canje_cash=cash(M),canje_n=cnt(M),canjes=canjes(M),canjes_prev=canjes(P),canjes_avg=avg(canjes),
+ canje_mode=MODE,canje=prim(M),canje_prev=prim(P),canje_avg=avg(prim),canje_cash=cash(M),canje_desc=desc(M),canje_n=cnt(M),canjes=canjes(M),canjes_prev=canjes(P),canjes_avg=avg(canjes),
  mejor_gasto=dict(nombre=bg.nom,gasto=float(bg.gasto),n=int(bg.n)),
  mejor_visitas=dict(nombre=bv.nom,gasto=float(bv.gasto),n=int(bv.n)),
  visitas=int(len(o)),mediana=med,n_big=int(len(big)),n_dob=int(len(dob)),
